@@ -4,7 +4,7 @@
 Configure, inspect, test, and remove a temporary Windows Defender Firewall rule that blocks inbound TCP traffic on port 23 (Telnet).
 
 ## Environment
-- OS: Windows 10/11
+- OS: Windows 11
 - Tool: Windows Defender Firewall with Advanced Security / PowerShell (Administrator)
 - Test port: TCP 23
 
@@ -51,7 +51,6 @@ Get-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" -ErrorAction Silen
 sudo ufw status verbose
 sudo ufw deny 23/tcp
 sudo ufw status numbered
-# Only if SSH access is actually needed: sudo ufw allow 22/tcp
 sudo ufw delete deny 23/tcp
 ```
 **Remote Linux warning:** Check SSH access and provider firewall rules before enabling or modifying UFW to avoid locking yourself out.
