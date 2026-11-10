@@ -69,13 +69,25 @@ Get-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" -ErrorAction Silen
 | Rule removal | Follow-up lookup returned no output | Verified removed |
 
 ## Screenshots
-The `screenshots/` folder contains the evidence captured during the practical:
-1. `01-firewall-profiles.png` — Firewall profile status.
-2. `02-existing-rules.png` — Existing firewall rules.
-3. `03-telnet-block-created.png` — Successful creation of the inbound TCP/23 block rule.
-4. `04-rule-port-filter.png` — Verified port-filter settings.
-5. `05-connectivity-test.png` — Listener check and connection-test output.
-6. `06-rule-removed.png` — Removal and follow-up verification.
+
+### 1. Firewall Profiles
+![Firewall Profiles](screenshots/01-firewall-profiles.png)
+
+### 2. Existing Firewall Rules
+![Existing Rules](screenshots/02-existing-rules.png)
+
+### 3. Telnet Block Rule
+![Rule Created](screenshots/03-telnet-block-created.png)
+
+### 4. Port Filter Configuration
+![Port Filter](screenshots/04-rule-port-filter.png)
+
+### 5. Connectivity Test
+![Connectivity Test](screenshots/05-connectivity-test.png)
+
+### 6. Rule Removal
+![Rule Removed](screenshots/06-rule-removed.png)
+
 
 ## Linux UFW reference
 These commands are for a Linux system with UFW installed; they were not part of the Windows screenshots in this project.
