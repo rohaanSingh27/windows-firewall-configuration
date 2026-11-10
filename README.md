@@ -84,7 +84,6 @@ These commands are for a Linux system with UFW installed; they were not part of 
 sudo ufw status verbose
 sudo ufw deny 23/tcp
 sudo ufw status numbered
-# Only if SSH access is needed and the SSH service is configured:
 sudo ufw allow 22/tcp
 sudo ufw delete deny 23/tcp
 ```
