@@ -1,78 +1,104 @@
-# Task 4 — Windows Firewall Configuration and Traffic Filtering
+# Task 4 — Setup and Use a Firewall on Windows/Linux
+
+## Overview
+This hands-on project explores how a firewall filters network traffic. I used Windows Defender Firewall with PowerShell to inspect firewall profiles and existing rules, create and verify a temporary inbound rule blocking TCP port 23 (Telnet), test connectivity, and remove the test rule afterward. Linux UFW commands are included as a reference.
 
 ## Objective
-Configure, inspect, test, and remove a temporary Windows Defender Firewall rule that blocks inbound TCP traffic on port 23 (Telnet).
+Configure and inspect basic firewall rules to understand how incoming and outgoing network traffic can be allowed or blocked.
 
 ## Environment
-- OS: Windows 11
-- Tool: Windows Defender Firewall with Advanced Security / PowerShell (Administrator)
-- Test port: TCP 23
+- Operating system: Windows (PowerShell running as Administrator)
+- Firewall: Windows Defender Firewall
+- Test protocol: TCP
+- Test port: 23 (Telnet)
+- Linux reference: UFW (Uncomplicated Firewall)
 
-## Safety
-Run commands on your own Windows machine. Do not disable the firewall. Do not change default policies or delete unrelated rules. A local `Test-NetConnection` failure by itself does not prove a firewall rule worked: the port might have no listening service.
+## What I did
 
-## Procedure
-### 1. Inspect existing firewall state
+### 1. Checked firewall profiles
 ```powershell
 Get-NetFirewallProfile | Select-Object Name, Enabled, DefaultInboundAction, DefaultOutboundAction
-Get-NetFirewallRule -PolicyStore ActiveStore | Select-Object -First 20 DisplayName, Direction, Action, Enabled
 ```
+**Observed result:** Domain, Private, and Public profiles all showed `Enabled = True`. The default inbound and outbound action fields displayed `NotConfigured` in this command output.
 
-### 2. Check whether Telnet is listening
+### 2. Listed existing firewall rules
 ```powershell
-Get-NetTCPConnection -LocalPort 23 -State Listen -ErrorAction SilentlyContinue
+Get-NetFirewallRule -PolicyStore ActiveStore |
+    Select-Object -First 20 DisplayName, Direction, Action, Enabled
 ```
+**Observed result:** The command displayed the first 20 rules from the ActiveStore. The output included both enabled and disabled rules, with inbound/outbound directions and allow actions.
 
-### 3. Create a temporary inbound block rule
+### 3. Created an inbound block rule for Telnet
 ```powershell
 New-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" -Direction Inbound -Protocol TCP -LocalPort 23 -Action Block -Profile Any
 ```
+**Observed result:** Windows returned the newly created rule. The output showed `Enabled = True`, `Direction = Inbound`, `Action = Block`, and `Profile = Any`.
 
-### 4. Verify the rule and its port filter
+### 4. Verified the rule's port filter
 ```powershell
-Get-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" | Format-List DisplayName, Enabled, Direction, Action, Profile
-Get-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" | Get-NetFirewallPortFilter | Format-List Protocol, LocalPort
+Get-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" |
+    Get-NetFirewallPortFilter
 ```
+**Observed result:** `Protocol = TCP`, `LocalPort = 23`, `RemotePort = Any`, `IcmpType = Any`, and `DynamicTarget = Any`.
 
-### 5. Test and interpret results
+### 5. Checked for a listener and tested connectivity
 ```powershell
+Get-NetTCPConnection -LocalPort 23 -State Listen -ErrorAction SilentlyContinue
 Test-NetConnection -ComputerName 127.0.0.1 -Port 23
 ```
-A failed test is **not** definitive evidence of firewall enforcement when nothing is listening on port 23. For meaningful verification, use a controlled test listener on a separate machine and test connectivity from another device, comparing results with the rule disabled/enabled. Loopback tests may not reflect inbound firewall enforcement. Record whether a listener exists and distinguish a rule configuration check from a verified blocked connection.
+**Observed result:** The listener check returned no output, so no TCP listener was found on local port 23 at the time of testing. `Test-NetConnection` reported `TcpTestSucceeded = False` and warned that the TCP connection to `127.0.0.1:23` failed.
 
-### 6. Remove only the rule created for this task
+**Important limitation:** This failed connection does not prove that the firewall blocked the traffic. Because no service was listening on port 23, the connection could fail even without the firewall rule. Also, a loopback test to `127.0.0.1` is not a reliable demonstration of inbound firewall enforcement. A controlled listener on a separate test machine and a connection attempt from another device would be needed to demonstrate blocking conclusively.
+
+### 6. Removed the temporary test rule
 ```powershell
 Remove-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound"
 Get-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" -ErrorAction SilentlyContinue
 ```
+**Observed result:** The removal command completed, and the subsequent lookup returned no output, indicating that the named test rule was no longer present.
 
-## Linux UFW equivalent (reference only)
+## Results summary
+| Check | Actual result | Status / interpretation |
+|---|---|---|
+| Firewall profiles | Domain, Private, Public: Enabled = True | Verified |
+| Existing rules | First 20 ActiveStore rules displayed | Completed |
+| Telnet block rule | Created; Enabled=True, Inbound, Block, Profile=Any | Verified |
+| Port filter | TCP; LocalPort=23; RemotePort=Any | Verified |
+| Port 23 listener | No output from listener check | No listener found |
+| Connectivity test | TcpTestSucceeded=False | Connection failed; firewall enforcement not proven |
+| Rule removal | Follow-up lookup returned no output | Verified removed |
+
+## Screenshots
+The `screenshots/` folder contains the evidence captured during the practical:
+1. `01-firewall-profiles.png` — Firewall profile status.
+2. `02-existing-rules.png` — Existing firewall rules.
+3. `03-telnet-block-created.png` — Successful creation of the inbound TCP/23 block rule.
+4. `04-rule-port-filter.png` — Verified port-filter settings.
+5. `05-connectivity-test.png` — Listener check and connection-test output.
+6. `06-rule-removed.png` — Removal and follow-up verification.
+
+## Linux UFW reference
+These commands are for a Linux system with UFW installed; they were not part of the Windows screenshots in this project.
+
 ```bash
 sudo ufw status verbose
 sudo ufw deny 23/tcp
 sudo ufw status numbered
+# Only if SSH access is needed and the SSH service is configured:
+sudo ufw allow 22/tcp
 sudo ufw delete deny 23/tcp
 ```
-**Remote Linux warning:** Check SSH access and provider firewall rules before enabling or modifying UFW to avoid locking yourself out.
 
-## Screenshots
-Add your own screenshots to `screenshots/`:
-1. `01-firewall-profiles.png`
-2. `02-existing-rules.png`
-3. `03-telnet-block-created.png`
-4. `04-rule-port-filter.png`
-5. `05-connectivity-test.png`
-6. `06-rule-removed.png`
+**Caution:** Before changing UFW on a remote Linux machine, confirm SSH access and any cloud/provider firewall settings so you do not lock yourself out.
 
-## Observations
-| Check | Result | Interpretation |
-|---|---|---|
-| Firewall enabled | Pending | Record profile state |
-| Port 23 listener present | Pending | Important test prerequisite |
-| Block rule created | Pending | Verify Action=Block, Direction=Inbound, TCP/23 |
-| Connection test | Pending | Distinguish refusal/no listener from filtering |
-| Rule removed | Pending | Restore prior state |
+## Key concepts learned
+- A firewall applies rules to control network traffic.
+- Inbound rules govern traffic arriving at a device; outbound rules govern traffic leaving it.
+- TCP port 23 is traditionally associated with Telnet, which does not encrypt normal session traffic.
+- A rule's direction, protocol, local port, profile, and action all matter.
+- A failed connection test is not, by itself, proof that a firewall blocked the connection; the destination service must also be listening.
+- Temporary test rules should be removed after the practical to restore the prior configuration.
 
 
 ## Conclusion
-A temporary inbound TCP/23 block rule can be created, inspected and removed without changing the system's default firewall policy. Actual enforcement should be validated with an appropriate controlled network test.
+I inspected the Windows firewall configuration, created and verified a temporary inbound TCP port 23 block rule, performed a connectivity test, and removed the rule afterward. The rule configuration and cleanup were verified. Since no service was listening on port 23, the failed connection test cannot independently establish that the firewall blocked the connection.
