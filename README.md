@@ -65,8 +65,6 @@ Add your own screenshots to `screenshots/`:
 5. `05-connectivity-test.png`
 6. `06-rule-removed.png`
 
-Do not upload private IPs, usernames, hostnames, or unrelated security configuration without redaction.
-
 ## Observations
 | Check | Result | Interpretation |
 |---|---|---|
