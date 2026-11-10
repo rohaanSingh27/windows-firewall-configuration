@@ -71,7 +71,7 @@ Get-NetFirewallRule -DisplayName "Task4-Block-Telnet-Inbound" -ErrorAction Silen
 ## Screenshots
 
 ### 1. Firewall Profiles
-![Firewall Profiles](screenshots/01. firewall-profiles.png)
+![Firewall Profiles](screenshots/01-firewall-profiles.png)
 
 ### 2. Existing Firewall Rules
 ![Existing Rules](screenshots/02-existing-rules.png)
